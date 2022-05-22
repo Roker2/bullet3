@@ -100,7 +100,7 @@ protected:
 	static btVector3 perpindicularComponent(const btVector3& direction, const btVector3& normal);
 
 	bool recoverFromPenetration(btCollisionWorld * collisionWorld);
-	void stepUp(btCollisionWorld * collisionWorld);
+	bool stepUp(btCollisionWorld * collisionWorld);
 	void updateTargetPositionBasedOnCollision(const btVector3& hit_normal, btScalar tangentMag = btScalar(0.0), btScalar normalMag = btScalar(1.0));
 	void stepForwardAndStrafe(btCollisionWorld * collisionWorld, const btVector3& walkMove);
 	void stepDown(btCollisionWorld * collisionWorld, btScalar dt);

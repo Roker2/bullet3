@@ -249,7 +249,7 @@ bool btKinematicCharacterController::recoverFromPenetration(btCollisionWorld* co
 	return penetration;
 }
 
-void btKinematicCharacterController::stepUp(btCollisionWorld* world)
+bool btKinematicCharacterController::stepUp(btCollisionWorld* world)
 {
 	btScalar stepHeight = 0;
 	if (m_verticalVelocity < 0)
@@ -285,7 +285,8 @@ void btKinematicCharacterController::stepUp(btCollisionWorld* world)
 		world->convexSweepTest(m_convexShape, start, end, callback, world->getDispatchInfo().m_allowedCcdPenetration);
 	}
 
-	if (callback.hasHit() && m_ghostObject->hasContactResponse() && needsCollision(m_ghostObject, callback.m_hitCollisionObject))
+	const bool hitUp = callback.hasHit() && m_ghostObject->hasContactResponse() && needsCollision(m_ghostObject, callback.m_hitCollisionObject);
+	if (hitUp)
 	{
 		// Only modify the position if the hit was a slope and not a wall or ceiling.
 		if (callback.m_hitNormalWorld.dot(m_up) > 0)
@@ -330,6 +331,7 @@ void btKinematicCharacterController::stepUp(btCollisionWorld* world)
 		m_currentStepOffset = stepHeight;
 		m_currentPosition = m_targetPosition;
 	}
+	return hitUp;
 }
 
 bool btKinematicCharacterController::needsCollision(const btCollisionObject* body0, const btCollisionObject* body1) const
@@ -760,31 +762,26 @@ void btKinematicCharacterController::playerStep(btCollisionWorld* collisionWorld
 		m_verticalVelocity = -btFabs(m_fallSpeed);
 	}
 	m_verticalOffset = m_verticalVelocity * dt;
-
-	btTransform xform;
-	xform = m_ghostObject->getWorldTransform();
-
 	//	printf("walkDirection(%f,%f,%f)\n",walkDirection[0],walkDirection[1],walkDirection[2]);
 	//	printf("walkSpeed=%f\n",walkSpeed);
 
-	stepUp(collisionWorld);
-	//todo: Experimenting with behavior of controller when it hits a ceiling..
-	//bool hitUp = stepUp (collisionWorld);
-	//if (hitUp)
-	//{
-	//	m_verticalVelocity -= m_gravity * dt;
-	//	if (m_verticalVelocity > 0 && m_verticalVelocity > m_jumpSpeed)
-	//	{
-	//		m_verticalVelocity = m_jumpSpeed;
-	//	}
-	//	if (m_verticalVelocity < 0 && btFabs(m_verticalVelocity) > btFabs(m_fallSpeed))
-	//	{
-	//		m_verticalVelocity = -btFabs(m_fallSpeed);
-	//	}
-	//	m_verticalOffset = m_verticalVelocity * dt;
+	const bool hitUp = stepUp(collisionWorld);
+	if (hitUp)
+	{
+		m_verticalVelocity -= m_gravity * dt;
+		if (m_verticalVelocity > 0 && m_verticalVelocity > m_jumpSpeed)
+		{
+			m_verticalVelocity = m_jumpSpeed;
+		}
+		if (m_verticalVelocity < 0 && btFabs(m_verticalVelocity) > btFabs(m_fallSpeed))
+		{
+			m_verticalVelocity = -btFabs(m_fallSpeed);
+		}
+		m_verticalOffset = m_verticalVelocity * dt;
+	}
 
-	//	xform = m_ghostObject->getWorldTransform();
-	//}
+	btTransform xform;
+	xform = m_ghostObject->getWorldTransform();
 
 	if (m_useWalkDirection)
 	{
