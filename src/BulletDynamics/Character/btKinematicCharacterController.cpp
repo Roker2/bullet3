@@ -862,11 +862,11 @@ bool btKinematicCharacterController::canJump() const
 
 void btKinematicCharacterController::jump(const btVector3& v)
 {
-	m_jumpSpeed = v.length2() == 0 ? m_SetjumpSpeed : v.length();
+	m_jumpSpeed = btFuzzyZero(v.length2()) ? m_SetjumpSpeed : v.length();
 	m_verticalVelocity = m_jumpSpeed;
 	m_wasJumping = true;
 
-	m_jumpAxis = v.length2() == 0 ? m_up : v.normalized();
+	m_jumpAxis = btFuzzyZero(v.length2()) ? m_up : v.normalized();
 
 	m_jumpPosition = m_ghostObject->getWorldTransform().getOrigin();
 
@@ -917,7 +917,7 @@ btScalar btKinematicCharacterController::getMaxPenetrationDepth() const
 
 bool btKinematicCharacterController::onGround() const
 {
-	return (fabs(m_verticalVelocity) < SIMD_EPSILON) && (fabs(m_verticalOffset) < SIMD_EPSILON);
+	return btFuzzyZero(m_verticalVelocity) && btFuzzyZero(m_verticalOffset);
 }
 
 void btKinematicCharacterController::setStepHeight(btScalar h)
@@ -978,7 +978,7 @@ void btKinematicCharacterController::setUpVector(const btVector3& up)
 
 btQuaternion btKinematicCharacterController::getRotation(btVector3& v0, btVector3& v1) const
 {
-	if (v0.length2() == 0 || v1.length2() == 0)
+	if (btFuzzyZero(v0.length2()) || btFuzzyZero(v1.length2()))
 	{
 		return btQuaternion{};
 	}
